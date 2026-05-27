@@ -1,100 +1,125 @@
 const axios = require("axios");
-const fs = require("fs-extra");
-const path = require("path");
+const fs = require("fs");
 
 const baseApiUrl = async () => {
-        const base = await axios.get("https://raw.githubusercontent.com/mahmudx7/HINATA/main/baseApiUrl.json");
-        return base.data.mahmud;
+        const base = await axios.get("https://raw.githubusercontent.com/mahmudx7/exe/main/baseApiUrl.json");
+        return base.data.mahmud69;
 };
 
 module.exports = {
         config: {
                 name: "alldl",
-                aliases: ["download"],
+                aliases: ["download", "dl"],
                 version: "1.7",
                 author: "MahMUD",
                 countDown: 10,
                 role: 0,
                 description: {
-                        bn: "যেকোনো সোশ্যাল মিডিয়া ভিডিও ডাউনলোড করুন (FB, TT, YT, IG)",
-                        en: "Download videos from any social media (FB, TT, YT, IG)",
-                        vi: "Tải xuống video từ bất kỳ phương tiện truyền thông xã hội nào"
+                        bn: "যেকোনো সোশ্যাল মিডিয়া ভিডিও ডাউনলোড করুন",
+                        en: "Download videos from any social media"
                 },
                 category: "media",
                 guide: {
-                        bn: '   {pn} <লিঙ্ক>: ভিডিও লিঙ্ক দিন'
-                                + '\n   অথবা ভিডিও লিঙ্কের রিপ্লাই দিয়ে ব্যবহার করুন',
+                        bn: '   {pn} <লিংক>: ভিডিওর লিংক দিন'
+                                + '\n   অথবা ভিডিও লিংকে রিপ্লাই দিয়ে {pn} লিখুন'
+                                + '\n\nSupported Platforms:\n• TikTok\n• YouTube / Shorts\n• Facebook / FB Watch\n• Instagram / Reels\n• Twitter (X)\n• Threads\n• Snapchat\n• Pinterest\n• Spotify\n• SoundCloud\n• Reddit\n• LinkedIn\n• CapCut\n• Dailymotion\n• Kwai / Kuaishou\n• Douyin\n• Bluesky\n• Tumblr',
                         en: '   {pn} <link>: Provide the video link'
-                                + '\n   Or reply to a video link',
-                        vi: '   {pn} <liên kết>: Cung cấp liên kết video'
-                                + '\n   Hoặc phản hồi một liên kết video'
+                                + '\n   Or reply to a link with {pn}'
+                                + '\n\nSupported Platforms:\n• TikTok\n• YouTube / Shorts\n• Facebook / FB Watch\n• Instagram / Reels\n• Twitter (X)\n• Threads\n• Snapchat\n• Pinterest\n• Spotify\n• SoundCloud\n• Reddit\n• LinkedIn\n• CapCut\n• Dailymotion\n• Kwai / Kuaishou\n• Douyin\n• Bluesky\n• Tumblr'
                 }
         },
 
         langs: {
                 bn: {
-                        noLink: "× বেবি, একটি সঠিক ভিডিও লিঙ্ক দাও অথবা লিঙ্কে রিপ্লাই দাও! 🔗",
-                        success: "𝐇𝐞𝐫𝐞'𝐬 𝐲𝐨𝐮𝐫 𝐝𝐨𝐰𝐧𝐥𝐨𝐚𝐝 𝐯𝐢𝐝𝐞𝐨 𝐛𝐚𝐛𝐲 <😘",
-                        error: "× ডাউনলোড করতে সমস্যা হয়েছে: %1। প্রয়োজনে Contact MahMUD।"
+                        noLink: "× বেবি, একটি সঠিক ভিডিও লিংক দাও অথবা লিংকে রিপ্লাই করো!",
+                        error: "× ভিডিও ডাউনলোড করতে সমস্যা হয়েছে: %1। প্রয়োজনে Contact MahMUD।\n•WhatsApp: 01836298139"
                 },
                 en: {
-                        noLink: "× Baby, please provide a valid video link or reply to one! 🔗",
-                        success: "𝐇𝐞𝐫𝐞'𝐬 𝐲𝐨𝐮𝐫 𝐝𝐨𝐰𝐧𝐥𝐨𝐚𝐝 𝐯𝐢𝐝𝐞𝐨 𝐛𝐚𝐛𝐲 <😘",
-                        error: "× Failed to download: %1. Contact MahMUD for help."
-                },
-                vi: {
-                        noLink: "× Cưng ơi, vui lòng cung cấp liên kết video hợp lệ! 🔗",
-                        success: "𝐇𝐞𝐫𝐞'𝐬 𝐲𝐨𝐮𝐫 𝐝𝐨𝐰𝐧𝐥𝐨𝐚𝐝 𝐯𝐢𝐝𝐞𝐨 𝐛𝐚𝐛𝐲 <😘",
-                        error: "× Lỗi tải xuống: %1. Liên hệ MahMUD để hỗ trợ."
+                        noLink: "× Baby, please provide a valid video link or reply to one!",
+                        error: "× Download error: %1. Contact MahMUD for help.\n•WhatsApp: 01836298139"
                 }
         },
 
-        onStart: async function ({ api, event, args, message, getLang }) {
+        onStart: async function ({ api, message, args, event, getLang }) {
                 const authorName = String.fromCharCode(77, 97, 104, 77, 85, 68);
                 if (this.config.author !== authorName) {
                         return api.sendMessage("You are not authorized to change the author name.", event.threadID, event.messageID);
                 }
 
-                const link = args[0] || event.messageReply?.body;
-                if (!link || !link.startsWith("http")) return message.reply(getLang("noLink"));
+                const mahmud = args[0] || event.messageReply?.body;
 
-                const cacheDir = path.join(__dirname, "cache");
-                const filePath = path.join(cacheDir, `alldl_${Date.now()}.mp4`);
+                if (!mahmud || !mahmud.startsWith("http")) {
+                        return message.reply(getLang("noLink"));
+                }
+
+                if (!(
+                        mahmud.includes("tiktok.com") ||
+                        mahmud.includes("youtube.com") || 
+                        mahmud.includes("youtu.be") ||
+                        mahmud.includes("twitter.com") || 
+                        mahmud.includes("x.com") ||
+                        mahmud.includes("facebook.com") || 
+                        mahmud.includes("fb.watch") ||
+                        mahmud.includes("instagram.com") ||
+                        mahmud.includes("tumblr.com") ||
+                        mahmud.includes("threads.net") ||
+                        mahmud.includes("spotify.com") ||
+                        mahmud.includes("soundcloud.com") ||
+                        mahmud.includes("snapchat.com") ||
+                        mahmud.includes("reddit.com") ||
+                        mahmud.includes("pinterest.com") || 
+                        mahmud.includes("pin.it") ||
+                        mahmud.includes("linkedin.com") ||
+                        mahmud.includes("kuaishou.com") || 
+                        mahmud.includes("kwai.com") ||
+                        mahmud.includes("douyin.com") ||
+                        mahmud.includes("dailymotion.com") || 
+                        mahmud.includes("dai.ly") ||
+                        mahmud.includes("capcut.com") ||
+                        mahmud.includes("bsky.app")
+                )) {
+                        return message.reply(getLang("noLink"));
+                }
+
+                if (!fs.existsSync(__dirname + "/cache")) fs.mkdirSync(__dirname + "/cache");
+                const path = __dirname + `/cache/alldl_${Date.now()}.mp4`;
 
                 try {
-                        api.setMessageReaction("⏳", event.messageID, () => {}, true);
-                        if (!fs.existsSync(cacheDir)) fs.mkdirSync(cacheDir, { recursive: true });
-
-                        const base = await baseApiUrl();
-                        const apiUrl = `${base}/api/download/video?link=${encodeURIComponent(link)}`;
+                        api.setMessageReaction("🐤", event.messageID, () => {}, true);
                         
+                        const base = await baseApiUrl();
+                        const apiUrl = `${base}/api/download?url=${encodeURIComponent(mahmud)}`;
+                        
+                        const apiRes = await axios.get(apiUrl);
+                        if (!apiRes.data || !apiRes.data.result) {
+                                throw new Error("Failed to fetch video URL from API");
+                        }
+
+                        const videoUrl = apiRes.data.result;
+                        const caption = apiRes.data.cp || "Downloaded Video"; 
+
                         const response = await axios({
                                 method: 'get',
-                                url: apiUrl,
-                                responseType: 'arraybuffer',
-                                headers: {
-                                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
-                                }
+                                url: videoUrl,
+                                responseType: 'arraybuffer'
                         });
 
-                        fs.writeFileSync(filePath, Buffer.from(response.data));
-
-                        const stats = fs.statSync(filePath);
-                        if (stats.size < 100) throw new Error("Invalid video file received.");
+                        fs.writeFileSync(path, Buffer.from(response.data, "binary"));
 
                         api.setMessageReaction("✅", event.messageID, () => {}, true);
 
-                        return message.reply({
-                                body: getLang("success"),
-                                attachment: fs.createReadStream(filePath)
-                        }, () => {
-                                if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-                        });
+                        return message.reply(
+                                {
+                                        body: caption,
+                                        attachment: fs.createReadStream(path)
+                                },
+                                () => fs.unlinkSync(path)
+                        );
 
                 } catch (err) {
-                        console.error("AllDL Error:", err);
+                        console.error("Error in alldl command:", err);
                         api.setMessageReaction("❎", event.messageID, () => {}, true);
-                        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+                        if (fs.existsSync(path)) fs.unlinkSync(path);
                         return message.reply(getLang("error", err.message));
                 }
         }
