@@ -1,108 +1,145 @@
 const axios = require("axios");
 const fs = require("fs");
+const path = require("path");
 
 const baseApiUrl = async () => {
-        const base = await axios.get("https://raw.githubusercontent.com/mahmudx7/HINATA/main/baseApiUrl.json");
-        return base.data.mahmud69;
+  const res = await axios.get(
+    "https://raw.githubusercontent.com/mahmudx7/HINATA/main/baseApiUrl.json"
+  );
+  return res.data.mahmud69;
 };
 
 module.exports = {
-        config: {
-                name: "autodl",
-                version: "1.7",
-                author: "MahMUD",
-                countDown: 0,
-                role: 0,
-                description: {
-                        bn: "টিকটক, ফেসবুক, ইনস্টাগ্রাম, ইউটিউব এবং আরও অনেক সাইট থেকে অটো ভিডিও ডাউনলোড করুন",
-                        en: "Auto download video from Tiktok, Facebook, Instagram, YouTube, and more"
-                },
-                category: "media",
-                guide: {
-                        bn: "[ভিডিও_লিংক]\n\nSupported Platforms:\n• TikTok\n• YouTube / Shorts\n• Facebook / FB Watch\n• Instagram / Reels\n• Twitter (X)\n• Threads\n• Snapchat\n• Pinterest\n• Spotify\n• SoundCloud\n• Reddit\n• LinkedIn\n• CapCut\n• Dailymotion\n• Kwai / Kuaishou\n• Douyin\n• Bluesky\n• Tumblr",
-                        en: "[video_link]\n\nSupported Platforms:\n• TikTok\n• YouTube / Shorts\n• Facebook / FB Watch\n• Instagram / Reels\n• Twitter (X)\n• Threads\n• Snapchat\n• Pinterest\n• Spotify\n• SoundCloud\n• Reddit\n• LinkedIn\n• CapCut\n• Dailymotion\n• Kwai / Kuaishou\n• Douyin\n• Bluesky\n• Tumblr"
-                }
+  config: {
+    name: "autodl",
+    version: "2.0",
+    author: "MahMUD",
+    countDown: 0,
+    role: 0,
+    description: {
+      en: "Auto download videos from social platforms"
+    },
+    category: "media",
+    guide: {
+      en: "[video link]"
+    }
+  },
+
+  langs: {
+    en: {
+      error: "❌ Failed to download video."
+    }
+  },
+
+  onStart: async function () {},
+
+  onChat: async function ({ api, event, getLang }) {
+
+    if (this.config.author !== "MahMUD") {
+      return api.sendMessage(
+        "You are not allowed to change author name.",
+        event.threadID,
+        event.messageID
+      );
+    }
+
+    try {
+      const text = event.body?.trim();
+      if (!text) return;
+
+      const urlMatch = text.match(/^https?:\/\/[^\s]+$/i);
+      if (!urlMatch) return;
+
+      const videoUrl = urlMatch[0];
+
+      const supportedDomains = [
+        "tiktok.com",
+        "youtube.com",
+        "youtu.be",
+        "facebook.com",
+        "fb.watch",
+        "instagram.com",
+        "twitter.com",
+        "x.com",
+        "threads.net",
+        "snapchat.com",
+        "reddit.com",
+        "pinterest.com",
+        "pin.it",
+        "spotify.com",
+        "soundcloud.com",
+        "linkedin.com",
+        "tumblr.com",
+        "capcut.com",
+        "dailymotion.com",
+        "dai.ly",
+        "kwai.com",
+        "kuaishou.com",
+        "douyin.com",
+        "bsky.app"
+      ];
+
+      const isSupported = supportedDomains.some(domain =>
+        videoUrl.includes(domain)
+      );
+
+      if (!isSupported) return;
+
+      api.setMessageReaction("⏳", event.messageID, () => {}, true);
+
+      const cacheDir = path.join(__dirname, "cache");
+
+      if (!fs.existsSync(cacheDir)) {
+        fs.mkdirSync(cacheDir, { recursive: true });
+      }
+
+      const filePath = path.join(
+        cacheDir,
+        `autodl_${Date.now()}.mp4`
+      );
+
+      const base = await baseApiUrl();
+
+      const res = await axios.get(
+        `${base}/api/download?url=${encodeURIComponent(videoUrl)}`
+      );
+
+      if (!res.data || !res.data.result) {
+        throw new Error("No result found");
+      }
+
+      const video = await axios.get(res.data.result, {
+        responseType: "arraybuffer"
+      });
+
+      fs.writeFileSync(filePath, video.data);
+
+      api.setMessageReaction("✅", event.messageID, () => {}, true);
+
+      api.sendMessage(
+        {
+          body: `𝐇𝐞𝐫𝐞'𝐬 𝐲𝐨𝐮𝐫 𝐕𝐢𝐝𝐞𝐨 𝐁𝐚𝐛𝐲 <😘\n\n• 𝐀𝐝𝐦𝐢𝐧: 𝗠𝗔𝗠𝗨𝗡`,
+          attachment: fs.createReadStream(filePath)
         },
-
-        langs: {
-                bn: {
-                        defaultCaption: "ডাউনলোড করা ভিডিও",
-                        error: "× ভিডিও ডাউনলোড করতে সমস্যা হয়েছে।\n•WhatsApp: 01830981279"
-                },
-                en: {
-                        defaultCaption: "Downloaded Video",
-                        error: "× Failed to download video.\n•WhatsApp: 01830981279"
-                }
+        event.threadID,
+        () => {
+          if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+          }
         },
+        event.messageID
+      );
 
-        onStart: async function () {},
+    } catch (err) {
+      console.log(err);
 
-        onChat: async function ({ api, event, getLang }) {
-                const authorName = String.fromCharCode(77, 97, 104, 77, 85, 68);
-                if (this.config.author !== authorName) {
-                        return api.sendMessage("You are not authorized to change the author name.", event.threadID, event.messageID);
-                }
-                
-                let textInput = event.body ? event.body.trim() : "";
+      api.setMessageReaction("❌", event.messageID, () => {}, true);
 
-                try {
-                        const exactUrlMatch = textInput.match(/^https?:\/\/[^\s]+$/i);
-                        if (!exactUrlMatch) return; 
-
-                        const mahmud = exactUrlMatch[0]; 
-
-                        if (
-                                mahmud.includes("tiktok.com") ||
-                                mahmud.includes("youtube.com") || 
-                                mahmud.includes("youtu.be") ||
-                                mahmud.includes("twitter.com") || 
-                                mahmud.includes("x.com") ||
-                                mahmud.includes("facebook.com") || 
-                                mahmud.includes("fb.watch") ||
-                                mahmud.includes("instagram.com") ||
-                                mahmud.includes("tumblr.com") ||
-                                mahmud.includes("threads.net") ||
-                                mahmud.includes("spotify.com") ||
-                                mahmud.includes("soundcloud.com") ||
-                                mahmud.includes("snapchat.com") ||
-                                mahmud.includes("reddit.com") ||
-                                mahmud.includes("pinterest.com") || 
-                                mahmud.includes("pin.it") ||
-                                mahmud.includes("linkedin.com") ||
-                                mahmud.includes("kuaishou.com") || 
-                                mahmud.includes("kwai.com") ||
-                                mahmud.includes("douyin.com") ||
-                                mahmud.includes("dailymotion.com") || 
-                                mahmud.includes("dai.ly") ||
-                                mahmud.includes("capcut.com") ||
-                                mahmud.includes("bsky.app")
-                        ) {
-                             api.setMessageReaction("🐤", event.messageID, (err) => {}, true);
-                                
-                                if (!fs.existsSync(__dirname + "/cache")) fs.mkdirSync(__dirname + "/cache");
-                                const path = __dirname + "/cache/mahmud.mp4";
-
-                                const base = await baseApiUrl();
-                                const response = await axios.get(`${base}/api/download?url=${encodeURIComponent(mahmud)}`);
-                                if (!response.data || !response.data.result) throw new Error("Failed to video URL");
-
-                                const videoUrl = response.data.result;
-                                const vid = (await axios.get(videoUrl, { responseType: "arraybuffer" })).data;
-                                fs.writeFileSync(path, Buffer.from(vid, "binary"));
-
-                                api.setMessageReaction("🪽", event.messageID, (err) => {}, true);
-                                api.sendMessage(
-                                        {
-                                                body: response.data.cp || getLang("defaultCaption"),
-                                                attachment: fs.createReadStream(path),
-                                        },
-                                        event.threadID,
-                                        () => fs.unlinkSync(path),
-                                        event.messageID
-                                );
-                        }
-                } catch (e) {
-                        api.setMessageReaction("❎", event.messageID, (err) => {}, true);
-                }
-        },
+      api.sendMessage(
+        getLang("error"),
+        event.threadID,
+        event.messageID
+      );
+    }
+  }
 };
