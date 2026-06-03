@@ -3,7 +3,7 @@ const { commands, aliases } = global.GoatBot;
 
 module.exports = {
         config: {
-                name: "help",
+                name: "help2",
                 version: "1.7",
                 author: "MahMUD",
                 countDown: 5,
