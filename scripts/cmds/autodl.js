@@ -1,145 +1,74 @@
 const axios = require("axios");
 const fs = require("fs");
-const path = require("path");
-
+const { shortenURL } = global.utils;
 const baseApiUrl = async () => {
-  const res = await axios.get(
-    "https://raw.githubusercontent.com/mahmudx7/HINATA/main/baseApiUrl.json"
+  const base = await axios.get(
+    `https://raw.githubusercontent.com/cyber-ullash/cyber-ullash/refs/heads/main/UllashApi.json`,
   );
-  return res.data.mahmud69;
+  return base.data.api;
 };
 
 module.exports = {
   config: {
     name: "autodl",
-    version: "2.0",
-    author: "MahMUD",
+    version: "1.0.1",
+    author: "Dipto",
     countDown: 0,
     role: 0,
     description: {
-      en: "Auto download videos from social platforms"
+      en: "Auto download video from tiktok, facebook, Instagram, YouTube, and more",
     },
     category: "media",
     guide: {
-      en: "[video link]"
-    }
+      en: "[video_link]",
+    },
   },
-
-  langs: {
-    en: {
-      error: "❌ Failed to download video."
-    }
-  },
-
   onStart: async function () {},
-
-  onChat: async function ({ api, event, getLang }) {
-
-    if (this.config.author !== "MahMUD") {
-      return api.sendMessage(
-        "You are not allowed to change author name.",
-        event.threadID,
-        event.messageID
-      );
-    }
+  onChat: async function ({ api, event }) {
+    let dipto = event.body ? event.body : "";
 
     try {
-      const text = event.body?.trim();
-      if (!text) return;
+      if (
+        dipto.startsWith("https://vt.tiktok.com") ||
+        dipto.startsWith("https://www.tiktok.com/") ||
+        dipto.startsWith("https://www.facebook.com") ||
+        dipto.startsWith("https://www.instagram.com/") ||
+        dipto.startsWith("https://youtu.be/") ||
+        dipto.startsWith("https://youtube.com/") ||
+        dipto.startsWith("https://x.com/") ||
+        dipto.startsWith("https://twitter.com/") ||
+        dipto.startsWith("https://vm.tiktok.com") ||
+        dipto.startsWith("https://fb.watch")
+      ) {
+        api.setMessageReaction("⏳", event.messageID, (err) => {}, true);
 
-      const urlMatch = text.match(/^https?:\/\/[^\s]+$/i);
-      if (!urlMatch) return;
+        const path = __dirname + `/cache/diptoo.mp4`;
 
-      const videoUrl = urlMatch[0];
+        const { data } = await axios.get(
+          `${await baseApiUrl()}/alldl?url=${encodeURIComponent(dipto)}`,
+        );
+        const vid = (
+          await axios.get(data.result, { responseType: "arraybuffer" })
+        ).data;
 
-      const supportedDomains = [
-        "tiktok.com",
-        "youtube.com",
-        "youtu.be",
-        "facebook.com",
-        "fb.watch",
-        "instagram.com",
-        "twitter.com",
-        "x.com",
-        "threads.net",
-        "snapchat.com",
-        "reddit.com",
-        "pinterest.com",
-        "pin.it",
-        "spotify.com",
-        "soundcloud.com",
-        "linkedin.com",
-        "tumblr.com",
-        "capcut.com",
-        "dailymotion.com",
-        "dai.ly",
-        "kwai.com",
-        "kuaishou.com",
-        "douyin.com",
-        "bsky.app"
-      ];
+        fs.writeFileSync(path, Buffer.from(vid, "utf-8"));
+        const url = await shortenURL(data.result);
+        api.setMessageReaction("✅", event.messageID, (err) => {}, true);
 
-      const isSupported = supportedDomains.some(domain =>
-        videoUrl.includes(domain)
-      );
+        api.sendMessage(
+          {
+            body: `${data.cp || null}\n✅ | Link: ${url || null}`,
 
-      if (!isSupported) return;
-
-      api.setMessageReaction("⏳", event.messageID, () => {}, true);
-
-      const cacheDir = path.join(__dirname, "cache");
-
-      if (!fs.existsSync(cacheDir)) {
-        fs.mkdirSync(cacheDir, { recursive: true });
+            attachment: fs.createReadStream(path),
+          },
+          event.threadID,
+          () => fs.unlinkSync(path),
+          event.messageID,
+        );
       }
-
-      const filePath = path.join(
-        cacheDir,
-        `autodl_${Date.now()}.mp4`
-      );
-
-      const base = await baseApiUrl();
-
-      const res = await axios.get(
-        `${base}/api/download?url=${encodeURIComponent(videoUrl)}`
-      );
-
-      if (!res.data || !res.data.result) {
-        throw new Error("No result found");
-      }
-
-      const video = await axios.get(res.data.result, {
-        responseType: "arraybuffer"
-      });
-
-      fs.writeFileSync(filePath, video.data);
-
-      api.setMessageReaction("✅", event.messageID, () => {}, true);
-
-      api.sendMessage(
-        {
-          body: `𝐇𝐞𝐫𝐞'𝐬 𝐲𝐨𝐮𝐫 𝐕𝐢𝐝𝐞𝐨 𝐁𝐚𝐛𝐲 <😘\n\n• 𝐀𝐝𝐦𝐢𝐧: 𝗠𝗔𝗠𝗨𝗡`,
-          attachment: fs.createReadStream(filePath)
-        },
-        event.threadID,
-        () => {
-          if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
-          }
-        },
-        event.messageID
-      );
-
-    } catch (err) {
-      console.log(err);
-
-      api.setMessageReaction("❌", event.messageID, () => {}, true);
-
-      api.sendMessage(
-        getLang("error"),
-        event.threadID,
-        event.messageID
-      );
+    } catch (e) {
+      api.setMessageReaction("❎", event.messageID, (err) => {}, true);
+      api.sendMessage(e, event.threadID, event.messageID);
     }
-  }
+  },
 };
