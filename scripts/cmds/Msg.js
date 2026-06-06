@@ -3,156 +3,143 @@ const { getStreamFromURL } = global.utils;
 module.exports = {
 	config: {
 		name: "msg",
-		version: "2.0",
+		version: "4.0",
 		author: "〲MAMUNツ࿐",
-		countDown: 5,
 		role: 0,
-		shortDescription: "Broadcast notification",
-		longDescription: "Send notification to all groups and receive replies",
-		category: "admin",
-		guide: "{pn} <message>"
+		category: "support system"
 	},
 
-	onStart: async function ({ api, args, message, threadsData }) {
-		const ADMIN_GROUP_ID = "4095426180772827";
+	onStart: async function ({ api, args, message, threadsData, event }) {
+
+		const OWNER_ID = "61590172617870";
+		const ADMIN_GROUP = "4095426180772827";
+
+		// 🔒 ONLY OWNER CAN USE
+		if (String(event.senderID) !== OWNER_ID) {
+			return message.reply("⛔ Only owner can use this command.");
+		}
 
 		const content = args.join(" ");
-		if (!content)
-			return message.reply("❌ | Please enter a message.");
+		if (!content) return message.reply("❌ Write a message.");
 
-		const allThreads = await threadsData.getAll();
+		const allThreads = await threadsData.getAll() || [];
 		let success = 0;
 
 		for (const thread of allThreads) {
-			if (!thread.threadID || thread.threadID == ADMIN_GROUP_ID)
-				continue;
+
+			const tid = thread.threadID || thread.id || thread.threadId;
+			if (!tid) continue;
 
 			try {
 				api.sendMessage(
-					`📢 𝗡𝗢𝗧𝗜𝗙𝗜𝗖𝗔𝗧𝗜𝗢𝗡\n\n${content}\n\n↩️ Reply to this message to contact Admin.`,
-					thread.threadID,
-					(error, info) => {
-						if (!error && info) {
+`📢 𝗡𝗢𝗧𝗜𝗙𝗜𝗖𝗔𝗧𝗜𝗢𝗡
+
+${content}
+
+──────────────────────
+💬 𝗥𝗘𝗣𝗟𝗬 𝗧𝗢 𝗧𝗛𝗜𝗦 𝗧𝗜𝗖𝗞𝗘𝗧`,
+					tid,
+					(err, info) => {
+
+						if (!err && info) {
 							global.GoatBot.onReply.set(info.messageID, {
 								commandName: "msg",
 								type: "userReply",
-								threadID: thread.threadID,
-								adminGroup: ADMIN_GROUP_ID,
-								messageID: info.messageID
+								threadID: tid
 							});
 						}
 					}
 				);
 
 				success++;
-			}
-			catch (e) {}
+			} catch {}
 		}
 
-		return message.reply(`✅ | Notification sent to ${success} groups.`);
+		return message.reply(`✅ Sent to ${success} groups.`);
 	},
 
-	onReply: async function ({
-		api,
-		event,
-		Reply,
-		message,
-		usersData,
-		threadsData
-	}) {
+	onReply: async function ({ api, event, Reply, usersData }) {
 
+		// 🌍 USER → ADMIN GROUP
 		if (Reply.type === "userReply") {
 
 			let userName = "Unknown User";
 			let groupName = "Unknown Group";
 
 			try {
-				const userData = await usersData.get(event.senderID);
-				userName = userData?.name || "Unknown User";
-			}
-			catch (e) {}
+				const u = await usersData.get(event.senderID);
+				userName = u?.name || userName;
+			} catch {}
 
 			try {
-				const threadInfo = await api.getThreadInfo(event.threadID);
-				groupName = threadInfo.threadName || "Unknown Group";
-			}
-			catch (e) {}
+				const t = await api.getThreadInfo(event.threadID);
+				groupName = t?.threadName || groupName;
+			} catch {}
 
 			const attachments = [];
-
-			if (event.attachments?.length > 0) {
+			if (event.attachments?.length) {
 				for (const att of event.attachments) {
 					try {
 						attachments.push(await getStreamFromURL(att.url));
-					}
-					catch (e) {}
+					} catch {}
 				}
 			}
 
-			api.sendMessage(
+			// 🔥 SEND TO ADMIN GROUP
+			return api.sendMessage(
 				{
 					body:
-`
+`📩 𝗡𝗘𝗪 𝗧𝗜𝗖𝗞𝗘𝗧
 
-👤 User: ${userName}
-🆔 UID: ${event.senderID}
+👤 𝗡𝗔𝗠𝗘 ➤ ${userName}
+🆔 𝗨𝗜𝗗 ➤ ${event.senderID}
 
-🏘️ Group: ${groupName}
-🆔 TID: ${event.threadID}
+🏘️ 𝗚𝗥𝗢𝗨𝗣 ➤ ${groupName}
+🆔 𝗧𝗜𝗗 ➤ ${event.threadID}
 
-💬 Message:
-${event.body || "[Attachment/Sticker]"}`,
+──────────────────────
+💬 𝗠𝗘𝗦𝗦𝗔𝗚𝗘:
+${event.body || "[Attachment]"}`,
 					attachment: attachments
 				},
-				Reply.adminGroup,
-				(error, info) => {
-					if (!error && info) {
+				ADMIN_GROUP,
+				(err, info) => {
+					if (!err && info) {
 						global.GoatBot.onReply.set(info.messageID, {
 							commandName: "msg",
 							type: "adminReply",
-							threadID: event.threadID,
-							adminGroup: Reply.adminGroup,
-							messageID: event.messageID
+							threadID: event.threadID // 🔥 SAVE USER THREAD
 						});
 					}
 				}
 			);
 		}
 
+		// 👑 ADMIN → USER THREAD
 		if (Reply.type === "adminReply") {
 
 			const attachments = [];
-
-			if (event.attachments?.length > 0) {
+			if (event.attachments?.length) {
 				for (const att of event.attachments) {
 					try {
 						attachments.push(await getStreamFromURL(att.url));
-					}
-					catch (e) {}
+					} catch {}
 				}
 			}
 
-			api.sendMessage(
+			return api.sendMessage(
 				{
-					body: `📨 𝗔𝗗𝗠𝗜𝗡 𝗥𝗘𝗣𝗟𝗬 n\n\n\n${event.body || ""}`,
+					body:
+`📨 𝗔𝗗𝗠𝗜𝗡 𝗥𝗘𝗣𝗟𝗬
+
+${event.body || ""}
+
+──────────────────────
+𝗣𝗢𝗪𝗘𝗥𝗘𝗗 𝗕𝗬 𝗠𝗔𝗠𝗨𝗡`,
 					attachment: attachments
 				},
-				Reply.threadID,
-				(error, info) => {
-					if (!error && info) {
-						global.GoatBot.onReply.set(info.messageID, {
-							commandName: "msg",
-							type: "userReply",
-							threadID: Reply.threadID,
-							adminGroup: event.threadID,
-							messageID: info.messageID
-						});
-					}
-				},
-				Reply.messageID
+				Reply.threadID
 			);
-
-			return message.reply("✅ | Reply sent successfully.");
 		}
 	}
 };
