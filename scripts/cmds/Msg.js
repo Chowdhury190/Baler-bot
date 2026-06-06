@@ -1,9 +1,12 @@
 const { getStreamFromURL } = global.utils;
 
+const OWNER_ID = "61590172617870";
+const ADMIN_GROUP = "4095426180772827";
+
 module.exports = {
 	config: {
 		name: "msg",
-		version: "4.0",
+		version: "4.4",
 		author: "〲MAMUNツ࿐",
 		role: 0,
 		category: "support system"
@@ -11,10 +14,6 @@ module.exports = {
 
 	onStart: async function ({ api, args, message, threadsData, event }) {
 
-		const OWNER_ID = "61590172617870";
-		const ADMIN_GROUP = "4095426180772827";
-
-		// 🔒 ONLY OWNER CAN USE
 		if (String(event.senderID) !== OWNER_ID) {
 			return message.reply("⛔ Only owner can use this command.");
 		}
@@ -36,8 +35,7 @@ module.exports = {
 
 ${content}
 
-──────────────
-
+────────────
 💬 𝗥𝗘𝗣𝗟𝗬 𝗧𝗢 𝗧𝗛𝗜𝗦 𝗠𝗘𝗦𝗦𝗔𝗚𝗘`,
 					tid,
 					(err, info) => {
@@ -86,12 +84,10 @@ ${content}
 				}
 			}
 
-			// 🔥 SEND TO ADMIN GROUP
 			return api.sendMessage(
 				{
 					body:
-`
-💬 𝗥𝗘𝗣𝗟𝗬 𝗠𝗘𝗦𝗦𝗔𝗚𝗘
+`📩 𝗡𝗘𝗪 𝗥𝗘𝗣𝗟𝗬
 
 👤 𝗡𝗔𝗠𝗘 ➤ ${userName}
 🆔 𝗨𝗜𝗗 ➤ ${event.senderID}
@@ -99,7 +95,6 @@ ${content}
 🏘️ 𝗚𝗥𝗢𝗨𝗣 ➤ ${groupName}
 🆔 𝗧𝗜𝗗 ➤ ${event.threadID}
 
-───────────────
 💬 𝗠𝗘𝗦𝗦𝗔𝗚𝗘:
 ${event.body || "[Attachment]"}`,
 					attachment: attachments
@@ -110,7 +105,7 @@ ${event.body || "[Attachment]"}`,
 						global.GoatBot.onReply.set(info.messageID, {
 							commandName: "msg",
 							type: "adminReply",
-							threadID: event.threadID // 🔥 SAVE USER THREAD
+							threadID: event.threadID
 						});
 					}
 				}
@@ -135,9 +130,8 @@ ${event.body || "[Attachment]"}`,
 `📨 𝗔𝗗𝗠𝗜𝗡 𝗥𝗘𝗣𝗟𝗬
 
 ${event.body || ""}
-
-────────────────
-𝗣𝗢𝗪𝗘𝗥𝗘𝗗 𝗕𝗬 𝗠𝗔𝗠𝗨𝗡`,
+----------------------
+ 𝗣𝗢𝗪𝗘𝗥𝗘𝗗 𝗕𝗬 𝗠𝗔𝗠𝗨𝗡`,
 					attachment: attachments
 				},
 				Reply.threadID
