@@ -91,10 +91,10 @@ module.exports = {
 `𝗣𝗥𝗘𝗙𝗜𝗫
 
 ⚙️ SYSTEM PREFIX
-➜ ${systemPrefix}
+🔐 ${systemPrefix}
 
 🛠️ GROUP PREFIX
-➜ ${groupPrefix}`
+🔐 ${groupPrefix}`
     );
   }
 };
