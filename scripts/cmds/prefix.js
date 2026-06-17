@@ -4,8 +4,8 @@ const moment = require("moment-timezone");
 module.exports = {
   config: {
     name: "prefix",
-    version: "2.4",
-    author: "MAMUN",
+    version: "2.5",
+    author: "〲MAMUNツ࿐",
     countDown: 5,
     role: 0,
     description: "Change & show bot prefix",
@@ -81,29 +81,20 @@ module.exports = {
     return message.reply(getLang("successThisThread", Reaction.newPrefix));
   },
 
-  onChat: async function ({ event, message, threadsData }) {
+  onChat: async function ({ event, message }) {
     if (!event.body || event.body.toLowerCase() !== "prefix") return;
 
     const systemPrefix = global.GoatBot.config.prefix;
     const groupPrefix = global.utils.getPrefix(event.threadID);
 
-    const threadInfo = await threadsData.get(event.threadID);
-    const groupName = threadInfo?.threadName || "Unknown Group";
-
-    const time = moment().tz("Asia/Dhaka").format("hh:mm A");
-    const date = moment().tz("Asia/Dhaka").format("DD MMM YYYY");
-
-    const owner = global.GoatBot.config.adminName || "⏤͟͟͞͞𝐊𝐚𝐥☺︎ 𝐍𝐚𝐠𝐢𝐧━━ᥫ᭡💋🐍";
-
     return message.reply(
-`╭━━━〔 PREFIX 〕━━━╮
-┃ 🎀 GROUP : ${groupName}
-┃ ☠️ SYSTEM : 『 ${systemPrefix} 』
-┃ ☯️ GROUP  : 『 ${groupPrefix} 』
-┃ 💠 TIME   : ${time}
-┃ ⚠️ DATE   : ${date}
-┃ Ⓜ️ OWNER  : ${owner}
-╰━━━〔 ✨ ×͜× 〕━━━╯`
+`𝗣𝗥𝗘𝗙𝗜𝗫
+
+⚙️ SYSTEM PREFIX
+➜ ${systemPrefix}
+
+🛠️ GROUP PREFIX
+➜ ${groupPrefix}`
     );
   }
 };
