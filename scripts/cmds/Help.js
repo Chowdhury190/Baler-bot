@@ -7,7 +7,7 @@ version: "2.0",
 author: "〲MAMUNツ࿐",
 countDown: 5,
 role: 0,
-shortDescription: "Premium Help Menu",
+shortDescription: "Help Menu",
 longDescription: "Show all commands by category",
 category: "system",
 guide: "{pn} [command]"
@@ -75,23 +75,23 @@ let body = `
 `;
 
 for (const category in categories) {  
-	body += `╭─────⭓ ${category.toUpperCase()}\n`;  
+	body += `💌╭─────⭓ ${category.toUpperCase()}\n`;  
 
 	categories[category]  
 		.sort()  
 		.forEach(cmd => {  
-			body += `│ >× ${cmd}\n`;  
+			body += `│ 🎀 ${cmd}\n`;  
 		});  
 
-	body += `╰────────────⭓\n\n`;  
+	body += `╰────────────⭓💌\n\n`;  
 }  
 
 body += `
 
 ╭━━━━━━━━━━━╮
-┃ 👤 USER : ${name}
-┃ 📊 TOTAL : ${commands.size}
-┃ ⚡ PREFIX : ${prefix}
+┃ 🧸 : ${name}
+┃ 🔮 : ${commands.size}
+┃ 🪄 : ${prefix}
 ╰━━━━━━━━━━━╯
 `;
 
