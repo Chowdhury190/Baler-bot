@@ -1,7 +1,7 @@
 const { commands } = global.GoatBot;
 
 module.exports = {
-config: {
+config: "Akash"
 name: "help",
 version: "2.0",
 author: "〲MAMUNツ࿐",
