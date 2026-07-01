@@ -49,7 +49,7 @@ if (args[0]) {
 ┃ ${config.guide || "{pn}"}
 
 ━━━━━━━━━━━⬣
-✨ 𝗣𝗼𝘄𝗲𝗿𝗲𝗱 𝗕𝘆 𝗠𝗔𝗠𝗨𝗡 ✨
+✨ 𝗣𝗼𝘄𝗲𝗿𝗲𝗱 𝗕𝘆 𝗮𝗸𝗮𝘀𝗵 ✨
 `;
 
 return message.reply(msg);  
