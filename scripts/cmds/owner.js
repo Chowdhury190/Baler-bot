@@ -54,7 +54,7 @@ module.exports = {
 
 		fs.ensureDirSync(cacheFolder);
 
-		const imageUrl = "https://i.imgur.com/g0GpgfG.jpeg";
+		const imageUrl = "https://i.imgur.com/3IGizox.jpeg";
 
 		request(imageUrl)
 			.pipe(fs.createWriteStream(imagePath))
